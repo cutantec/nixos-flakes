@@ -2,28 +2,59 @@
 # your system. Help is available in the configuration.nix(5) man page, on
 # https://search.nixos.org/options and in the NixOS manual (`nixos-help`).
 
-{ config, lib, pkgs, ... }:
+{ inputs, config, lib, pkgs, ... }:
 
 {
   imports =
     [ # Include the results of the hardware scan.
-      /etc/hardware-configuration.nix
+      /etc/nixos/hardware-configuration.nix
     ];
 
   nix.settings.experimental-features = ["nix-command" "flakes"];
 
+  boot.loader = {
+
+  	efi = {
+		canTouchEfiVariables = true;
+		efiSysMountPoint = "/boot/efi";
+	};
+
+  	grub = {
+		enable = true;
+		device = "nodev";
+		efiSupport = true;
+	};
+
+	grub2-theme = {
+		enable = true;
+		theme = "stylish";
+		footer = true;
+		customResolution = "1920x1080";
+	};
+  };
 
   # Use the systemd-boot EFI boot loader.
-  boot.loader.systemd-boot.enable = true;
-  boot.loader.efi.canTouchEfiVariables = true;
+  #boot.loader.systemd-boot.enable = true;
+  #boot.loader.efi.canTouchEfiVariables = true;
 
   # Use latest kernel.
   boot.kernelPackages = pkgs.linuxPackages_latest;
 
-   networking.hostName = "nixf"; # Define your hostname.
   # Pick only one of the below networking options.
   # networking.wireless.enable = true;  # Enables wireless support via wpa_supplicant.
-   networking.networkmanager.enable = true;  # Easiest to use and most distros use this by default.
+   networking = {
+   hostName = "nixf";
+   networkmanager.enable = true; 
+   networkmanager.dns = "none";
+   useDHCP = false;
+   nameservers = [
+	"1.1.1.1"
+	"8.8.8.8"
+	"114.114.114.114"
+	"8.8.4.4"
+	"1.0.0.1"
+     ];
+   };
    
   # Set your time zone.
    time.timeZone = "Asia/Shanghai";
@@ -41,8 +72,10 @@
   # };
 
   # Enable the X11 windowing system.
-  # services.xserver.enable = true;
     services.xserver.desktopManager.runXdgAutostartIfNone = true;
+    services.xserver.displayManager.defaultSession = "hyprland+uwsm";
+    services.xserver.enable = true;
+    services.xserver.videoDrivers = ["amdgpu"];
     hardware.graphics = {
 	  enable = true;
 	  enable32Bit = true;
@@ -87,10 +120,14 @@
   # You can use https://search.nixos.org/ to find more packages (and options).
   nixpkgs.config.allowUnfree = true;
    environment.systemPackages = with pkgs; [
+   	vim
 	neovim
+	hmcl
+	rocmPackages.rocm-smi
 	google-chrome
 	qq
 	yazi
+	alsa-utils
 	flclash
 	clash-verge-rev
      	fastfetch
@@ -100,6 +137,7 @@
 	kitty
 	wofi
 	waybar
+	wlogout
 	btop
      	wget
    ];
@@ -145,7 +183,7 @@ i18n.inputMethod = {
   # networking.firewall.allowedTCPPorts = [ ... ];
   # networking.firewall.allowedUDPPorts = [ ... ];
   # Or disable the firewall altogether.
-   networking.firewall.enable = false;
+  # networking.firewall.enable = false;
 
   # Copy the NixOS configuration file and link it from the resulting system
   # (/run/current-system/configuration.nix). This is useful in case you
