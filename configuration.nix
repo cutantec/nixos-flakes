@@ -7,10 +7,10 @@
 {
   imports =
     [ # Include the results of the hardware scan.
-      /etc/nixos/hardware-configuration.nix
+      ./hardware-configuration.nix
     ];
 
-  nix.settings.experimental-features = ["nix-command" "flakes"];
+#  nix.settings.experimental-features = ["nix-command" "flakes"];
 
   boot.loader = {
 
@@ -23,19 +23,15 @@
 		enable = true;
 		device = "nodev";
 		efiSupport = true;
+		gfxmodeEfi = "1920x1080";
+		theme = pkgs.catppuccin-grub;
 	};
 
-	grub2-theme = {
-		enable = true;
-		theme = "stylish";
-		footer = true;
-		customResolution = "1920x1080";
-	};
   };
 
   # Use the systemd-boot EFI boot loader.
-  #boot.loader.systemd-boot.enable = true;
-  #boot.loader.efi.canTouchEfiVariables = true;
+  # boot.loader.systemd-boot.enable = true;
+  # boot.loader.efi.canTouchEfiVariables = true;
 
   # Use latest kernel.
   boot.kernelPackages = pkgs.linuxPackages_latest;
@@ -44,10 +40,13 @@
   # networking.wireless.enable = true;  # Enables wireless support via wpa_supplicant.
    networking = {
    hostName = "nixf";
-   networkmanager.enable = true; 
+   networkmanager.enable = true;
+   networkmanager.wifi.powersave = false;
    networkmanager.dns = "none";
    useDHCP = false;
    nameservers = [
+   	"223.5.5.5"
+	"119.29.29.29"
 	"1.1.1.1"
 	"8.8.8.8"
 	"114.114.114.114"
@@ -73,7 +72,14 @@
 
   # Enable the X11 windowing system.
     services.xserver.desktopManager.runXdgAutostartIfNone = true;
-    services.xserver.displayManager.defaultSession = "hyprland+uwsm";
+    services.displayManager.sddm = {
+	  enable = true;
+	  theme = "sddm-astronaut-theme";
+	  package = pkgs.kdePackages.sddm;
+	  extraPackages = with pkgs; [
+	  	sddm-astronaut
+	  ];
+    };
     services.xserver.enable = true;
     services.xserver.videoDrivers = ["amdgpu"];
     hardware.graphics = {
@@ -100,14 +106,15 @@
   # services.libinput.enable = true;
 
   # Define a user account. Don't forget to set a password with ‘passwd’.
-  # users.users.alice = {
-  #   isNormalUser = true;
-  #   extraGroups = [ "wheel" ]; # Enable ‘sudo’ for the user.
-  #   packages = with pkgs; [
-  #     tree
-  #   ];
-  # };
-
+   users.users.cutan = {
+     isNormalUser = true;
+     shell = pkgs.fish;
+     extraGroups = [ "wheel" ]; # Enable ‘sudo’ for the user.
+     packages = with pkgs; [
+       tree
+     ];
+   };
+   programs.fish.enable = true;
    programs.firefox.enable = true;
    programs.steam.enable = true;
    programs.hyprland = {
@@ -123,16 +130,19 @@
    	vim
 	neovim
 	hmcl
-	rocmPackages.rocm-smi
 	google-chrome
 	qq
 	yazi
 	alsa-utils
+	nvtopPackages.amd
+	catppuccin-grub
+	catppuccin-sddm
+	sddm-astronaut
+	kdePackages.qtmultimedia
 	flclash
 	clash-verge-rev
      	fastfetch
 	hyprpaper
-	fish
 	git
 	kitty
 	wofi
@@ -143,28 +153,28 @@
    ];
 
    fonts.packages = with pkgs; [
-  noto-fonts
-  noto-fonts-cjk-sans
-  noto-fonts-emoji
-  liberation_ttf
-  fira-code
-  fira-code-symbols
-  mplus-outline-fonts.githubRelease
-  dina-font
-  proggyfonts
-  font-awesome
-  jetbrains-mono
-];
+	  noto-fonts
+	  noto-fonts-cjk-sans
+	  noto-fonts-emoji
+	  liberation_ttf
+	  fira-code
+	  fira-code-symbols
+	  mplus-outline-fonts.githubRelease
+	  dina-font
+	  proggyfonts
+	  font-awesome
+	  jetbrains-mono
+	];
 
-#fcitx5
-i18n.inputMethod = {
-    enable = true;
-    type = "fcitx5";
-    fcitx5.addons = with pkgs; [
-      fcitx5-rime
-      fcitx5-chinese-addons
-    ];
-  };
+  #fcitx5
+    i18n.inputMethod = {
+    	enable = true;
+    	type = "fcitx5";
+    	fcitx5.addons = with pkgs; [
+    	fcitx5-rime
+      	fcitx5-chinese-addons
+    		];
+  	};
 
   # Some programs need SUID wrappers, can be configured further or are
   # started in user sessions.
